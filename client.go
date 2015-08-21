@@ -9,7 +9,7 @@ import (
 func ClientFromKeys(network, laddr, clientCrt, clientKey, caCrt string) (*rpc.Client, error) {
 	cert, err := tls.LoadX509KeyPair(clientCrt, clientKey)
 	if err != nil {
-		log.Fatalf("client: loadkeys: %s", err)
+		return nil, err
 	}
 	/* XXX: Do Validation of the client cert, and ensure the extended client
 	 *      usage bit is flipped, otherwise the server will choke on it */
