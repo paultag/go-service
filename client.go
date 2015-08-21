@@ -2,11 +2,10 @@ package service
 
 import (
 	"crypto/tls"
-	"log"
-	"net/rpc"
+	"net"
 )
 
-func ClientFromKeys(network, laddr, clientCrt, clientKey, caCrt string) (*rpc.Client, error) {
+func DialFromKeys(network, laddr, clientCrt, clientKey, caCrt string) (net.Conn, error) {
 	cert, err := tls.LoadX509KeyPair(clientCrt, clientKey)
 	if err != nil {
 		return nil, err
@@ -29,6 +28,5 @@ func ClientFromKeys(network, laddr, clientCrt, clientKey, caCrt string) (*rpc.Cl
 	if err != nil {
 		return nil, err
 	}
-	client := rpc.NewClient(conn)
-	return client, nil
+	return conn, nil
 }
