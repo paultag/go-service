@@ -8,7 +8,7 @@ import (
 	"net/rpc"
 )
 
-func ListenFromKeys(network, laddr, serverCrt, serverKey, caCrt string) (*Listener, error) {
+func ListenFromKeys(laddr, serverCrt, serverKey, caCrt string) (*Listener, error) {
 	cert, err := tls.LoadX509KeyPair(serverCrt, serverKey)
 	if err != nil {
 		return nil, err
@@ -19,7 +19,7 @@ func ListenFromKeys(network, laddr, serverCrt, serverKey, caCrt string) (*Listen
 		return nil, err
 	}
 
-	l, e := Listen(network, laddr, caPool, cert)
+	l, e := Listen(laddr, caPool, cert)
 	if e != nil {
 		return nil, e
 	}
@@ -37,8 +37,19 @@ func Serve(listener *Listener) {
 	}
 }
 
-func Listen(network, laddr string, caPool *x509.CertPool, serverCertPair tls.Certificate) (*Listener, error) {
-	l, e := tls.Listen(network, laddr, &tls.Config{
+func Handle(listener *Listener, coordinator Coordinator) {
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			log.Printf("Error: %s\n", err)
+			continue
+		}
+		go coordinator.Handle(rpc.NewClient(conn), conn)
+	}
+}
+
+func Listen(laddr string, caPool *x509.CertPool, serverCertPair tls.Certificate) (*Listener, error) {
+	l, e := tls.Listen("tcp", laddr, &tls.Config{
 		Certificates: []tls.Certificate{serverCertPair},
 		ClientAuth:   tls.RequireAndVerifyClientCert,
 		ClientCAs:    caPool,

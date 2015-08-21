@@ -5,7 +5,7 @@ import (
 	"net"
 )
 
-func DialFromKeys(network, laddr, clientCrt, clientKey, caCrt string) (net.Conn, error) {
+func DialFromKeys(laddr, clientCrt, clientKey, caCrt string) (net.Conn, error) {
 	cert, err := tls.LoadX509KeyPair(clientCrt, clientKey)
 	if err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func DialFromKeys(network, laddr, clientCrt, clientKey, caCrt string) (net.Conn,
 		RootCAs:      caPool,
 	}
 
-	conn, err := tls.Dial(network, laddr, &config)
+	conn, err := tls.Dial("tcp", laddr, &config)
 	if err != nil {
 		return nil, err
 	}
