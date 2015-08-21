@@ -2,9 +2,6 @@ package service
 
 import (
 	"crypto/tls"
-	"crypto/x509"
-	"fmt"
-	"io/ioutil"
 	"log"
 	"net/rpc"
 )
@@ -15,13 +12,9 @@ func ClientFromKeys(network, laddr, clientCrt, clientKey, caCrt string) (*rpc.Cl
 		log.Fatalf("client: loadkeys: %s", err)
 	}
 
-	caPool := x509.NewCertPool()
-	x509CaCrt, err := ioutil.ReadFile(caCrt)
+	caPool, err := caFileToPool(caCrt)
 	if err != nil {
 		return nil, err
-	}
-	if ok := caPool.AppendCertsFromPEM(x509CaCrt); !ok {
-		return nil, fmt.Errorf("Error appending CA cert from PEM!")
 	}
 
 	config := tls.Config{

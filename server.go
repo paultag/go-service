@@ -3,8 +3,6 @@ package service
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/rpc"
@@ -16,13 +14,9 @@ func ListenFromKeys(network, laddr, serverCrt, serverKey, caCrt string) (*Listen
 		return nil, err
 	}
 
-	caPool := x509.NewCertPool()
-	caCert, err := ioutil.ReadFile(caCrt)
+	caPool, err := caFileToPool(caCrt)
 	if err != nil {
 		return nil, err
-	}
-	if ok := caPool.AppendCertsFromPEM(caCert); !ok {
-		return nil, fmt.Errorf("Error appending CA cert from PEM!")
 	}
 
 	l, e := Listen(network, laddr, caPool, cert)
