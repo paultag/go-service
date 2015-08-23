@@ -3,6 +3,7 @@ package service
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"log"
 	"net"
 	"net/rpc"
@@ -44,7 +45,8 @@ func Handle(listener *Listener, coordinator Coordinator) {
 			log.Printf("Error: %s\n", err)
 			continue
 		}
-		go coordinator.Handle(rpc.NewClient(conn), conn)
+		mConn := conn.(*Conn)
+		go coordinator.Handle(rpc.NewClient(conn), mConn)
 	}
 }
 
@@ -88,6 +90,10 @@ func (l *Listener) Accept() (net.Conn, error) {
 	tlsConn.Handshake()
 	peerCertificates := tlsConn.ConnectionState().PeerCertificates
 	tlsConn.Certificates = peerCertificates
+
+	if len(peerCertificates) <= 0 {
+		return nil, fmt.Errorf("No peer certs during handshake")
+	}
 
 	for _, cert := range peerCertificates {
 		tlsConn.CommonNames = append(tlsConn.CommonNames, cert.Subject.CommonName)
