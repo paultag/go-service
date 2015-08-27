@@ -27,15 +27,19 @@ func ListenFromKeys(laddr, serverCrt, serverKey, caCrt string) (*Listener, error
 	return l, nil
 }
 
-func Serve(listener *Listener) {
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			log.Printf("Error: %s\n", err)
-			continue
-		}
-		go rpc.ServeConn(conn)
-	}
+func readOneByte(c net.Conn) (byte, error) {
+	out := make([]byte, 1)
+	_, err := c.Read(out)
+	return out[0], err
+}
+
+func ServeConn(conn net.Conn) {
+	conn.Write([]byte{'m'})
+	rpc.ServeConn(conn)
+}
+
+func Client(conn net.Conn) *rpc.Client {
+	return rpc.NewClient(conn)
 }
 
 func Handle(listener *Listener, coordinator Coordinator) {
@@ -45,8 +49,23 @@ func Handle(listener *Listener, coordinator Coordinator) {
 			log.Printf("Error: %s\n", err)
 			continue
 		}
-		mConn := conn.(*Conn)
-		go coordinator.Handle(rpc.NewClient(conn), mConn)
+		class, err := readOneByte(conn)
+		if err != nil {
+			conn.Close()
+		}
+
+		switch class {
+		case 'm':
+			log.Printf("Minion has connected.\n")
+			mConn := conn.(*Conn)
+			go coordinator.Handle(rpc.NewClient(conn), mConn)
+		case 'r':
+			log.Printf("Administrator has connected.\n")
+			go rpc.ServeConn(conn)
+		default:
+			log.Printf("No idea what that was. Closing. Value %c\n", class)
+			conn.Close()
+		}
 	}
 }
 
