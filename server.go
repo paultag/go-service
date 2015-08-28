@@ -44,6 +44,8 @@ func Client(conn net.Conn) *rpc.Client {
 }
 
 func Handle(listener *Listener, coordinator Coordinator) {
+	coordinator.Register()
+
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
@@ -91,6 +93,7 @@ type Conn struct {
 
 	Certificates []*x509.Certificate
 	CommonNames  []string
+	Name         string
 }
 
 func (l *Listener) Accept() (net.Conn, error) {
@@ -118,6 +121,7 @@ func (l *Listener) Accept() (net.Conn, error) {
 	for _, cert := range peerCertificates {
 		tlsConn.CommonNames = append(tlsConn.CommonNames, cert.Subject.CommonName)
 	}
+	tlsConn.Name = tlsConn.CommonNames[0]
 
 	return tlsConn, nil
 }

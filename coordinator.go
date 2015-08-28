@@ -5,5 +5,6 @@ import (
 )
 
 type Coordinator interface {
+	Register()
 	Handle(*rpc.Client, *Conn)
 }
