@@ -39,6 +39,7 @@ func ServeConn(conn net.Conn) {
 }
 
 func Client(conn net.Conn) *rpc.Client {
+	conn.Write([]byte{'r'})
 	return rpc.NewClient(conn)
 }
 
